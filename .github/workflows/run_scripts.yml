@@ -1,59 +1,55 @@
-# .github/workflows/run_scripts.yml (Final Corrected Version)
+# .github/workflows/run_scripts.yml
 
 name: Run Data and Alert Scripts
 
-# Defines the triggers for the automation
+# Defines WHEN the automation runs
 on:
-  # Trigger 1: On a schedule (runs automatically)
+  # This runs the job automatically on a schedule
   schedule:
-    # "cron" syntax: runs at 15-minute intervals (e.g., at 1:00, 1:15, 1:30, 1:45)
+    # "cron" syntax: runs at minute 15, 30, 45, and 0 of every hour.
     - cron: '*/15 * * * *'
   
-  # Trigger 2: Manually (allows you to run it from the "Actions" tab on GitHub)
+  # This allows you to run the job manually from the "Actions" tab on GitHub
   workflow_dispatch:
 
 jobs:
-  # A job is a sequence of tasks that run on a virtual machine
   run-backend-tasks:
-    # Use a standard, free Linux virtual machine provided by GitHub
+    # Use a standard, free virtual machine provided by GitHub
     runs-on: ubuntu-latest
 
-    # The steps are the individual commands to be executed in order
     steps:
-      # Step 1: Download your code from this repository onto the virtual machine
+      # Step 1: Download your code from the repository
       - name: Checkout repository code
         uses: actions/checkout@v4
 
-      # Step 2: Set up an environment with Python version 3.11
+      # Step 2: Set up a Python environment on the virtual machine
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      # Step 3: Install all the Python libraries listed in your requirements.txt file
+      # Step 3: Install all the libraries your scripts need
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           python -m spacy download en_core_web_sm
       
-      # Step 4: Securely create the secrets.toml file for this job's duration
+      # Step 4: Create the secret file securely for this job
       - name: Create secrets.toml file from repository secret
         env:
-          # This pulls your GitHub Repository Secret named STREAMLIT_SECRETS
-          # and makes it available as an environment variable in this step
+          # This pulls your GitHub Repository Secret into the job
           STREAMLIT_SECRETS: ${{ secrets.STREAMLIT_SECRETS }}
         run: |
-          # Ensure the target directory exists before writing to it
+          # Ensure the target directory exists
           mkdir -p .streamlit
-          # IMPORTANT: Use single quotes to treat the secret as plain text
-          # and prevent the shell from misinterpreting special characters
+          # Use single quotes to treat the secret as plain text
           echo '${{ secrets.STREAMLIT_SECRETS }}' > .streamlit/secrets.toml
       
-      # Step 5: Execute the data collection script using the newly created secret file
+      # Step 5: Run the data collection script
       - name: Run Data Collection Script
         run: python datacollection.py
       
-      # Step 6: Execute the notification and alert script
+      # Step 6: Run the notification engine script
       - name: Run Notification Engine Script
         run: python notification_engine.py
