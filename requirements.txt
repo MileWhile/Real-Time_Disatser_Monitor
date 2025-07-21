@@ -1,0 +1,16 @@
+# requirements.txt
+
+streamlit
+pandas
+pymongo
+folium
+streamlit-folium
+plotly
+firebase-admin
+requests
+spacy==3.7.2
+geopy
+seaborn
+matplotlib
+wordcloud
+streamlit-option-menu

@@ -1,0 +1,14 @@
+﻿# Python virtual environment folder
+venv/
+
+# Streamlit secrets file (CRITICAL FOR SECURITY)
+.streamlit/secrets.toml
+
+# Python cache files and logs
+__pycache__/
+*.pyc
+*.log
+
+# IDE and OS specific files
+.vscode/
+.DS_Store

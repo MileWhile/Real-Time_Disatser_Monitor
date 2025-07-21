@@ -1,0 +1,59 @@
+# .github/workflows/run_scripts.yml (Final Corrected Version)
+
+name: Run Data and Alert Scripts
+
+# Defines the triggers for the automation
+on:
+  # Trigger 1: On a schedule (runs automatically)
+  schedule:
+    # "cron" syntax: runs at 15-minute intervals (e.g., at 1:00, 1:15, 1:30, 1:45)
+    - cron: '*/15 * * * *'
+  
+  # Trigger 2: Manually (allows you to run it from the "Actions" tab on GitHub)
+  workflow_dispatch:
+
+jobs:
+  # A job is a sequence of tasks that run on a virtual machine
+  run-backend-tasks:
+    # Use a standard, free Linux virtual machine provided by GitHub
+    runs-on: ubuntu-latest
+
+    # The steps are the individual commands to be executed in order
+    steps:
+      # Step 1: Download your code from this repository onto the virtual machine
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up an environment with Python version 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # Step 3: Install all the Python libraries listed in your requirements.txt file
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m spacy download en_core_web_sm
+      
+      # Step 4: Securely create the secrets.toml file for this job's duration
+      - name: Create secrets.toml file from repository secret
+        env:
+          # This pulls your GitHub Repository Secret named STREAMLIT_SECRETS
+          # and makes it available as an environment variable in this step
+          STREAMLIT_SECRETS: ${{ secrets.STREAMLIT_SECRETS }}
+        run: |
+          # Ensure the target directory exists before writing to it
+          mkdir -p .streamlit
+          # IMPORTANT: Use single quotes to treat the secret as plain text
+          # and prevent the shell from misinterpreting special characters
+          echo '${{ secrets.STREAMLIT_SECRETS }}' > .streamlit/secrets.toml
+      
+      # Step 5: Execute the data collection script using the newly created secret file
+      - name: Run Data Collection Script
+        run: python datacollection.py
+      
+      # Step 6: Execute the notification and alert script
+      - name: Run Notification Engine Script
+        run: python notification_engine.py
